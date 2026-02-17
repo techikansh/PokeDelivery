@@ -82,6 +82,42 @@ Das Dev Team hat bereits eine Entwicklerversion der APP auf Basis des `Requireme
 
 ---
 
+
+
+## Branching Strategy
+
+We use two long-lived branches and feature branches.
+
+### Branches
+
+**master (stable / production)**  
+Contains the stable and release-ready version of the application.  
+Direct pushes are not allowed.
+
+**main (development / integration)**  
+Used to integrate completed features before promoting them to `master`.  
+Direct pushes are not allowed.
+
+**feature/<short-description>**  
+Used for implementing new features or fixes (e.g., `feature/add-cache`, `feature/fix-ci`).
+
+### Workflow
+
+1. Create a `feature/*` branch from `main`.
+2. Implement changes in the feature branch.
+3. Open a Pull Request from `feature/*` → `main`.
+4. The Pull Request must:
+   - Be approved by at least one reviewer.
+   - Pass all GitHub Actions CI checks.
+5. For a release, open a Pull Request from `main` → `master`.
+6. This Pull Request must also be approved and pass CI before merging.
+
+ 
+ ---
+
+
+
+
 ## Wissenswertes
 
 ### Videos
@@ -113,4 +149,5 @@ Das Dev Team hat bereits eine Entwicklerversion der APP auf Basis des `Requireme
 | **Prometheus**                     | https://prometheus.io/docs/introduction/overview/ |
 | **Grafana**                        | https://grafana.com/docs/                                                |
 | **Azure Portal**                   | https://portal.azure.com/#home                                      |
+
 | **Application Insights**           | https://learn.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview |
