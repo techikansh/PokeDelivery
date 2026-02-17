@@ -1,4 +1,10 @@
 {
+  "name": "pokedelivery-api",
+  "private": true,
+  "scripts": {
+    "start": "func start",
+    "test": "node getPokemon/test.js"
+  },
   "dependencies": {
     "axios": "^1.10.0",
     "azure-functions-core-tools": "^4.1.0"
