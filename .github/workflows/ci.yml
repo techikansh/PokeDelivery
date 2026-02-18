@@ -22,6 +22,15 @@ jobs:
       - name: Install API deps
         run: npm ci
         working-directory: api
+      - name: Verify Azure Functions Core Tools install
+        run: |
+          node -v
+          npm -v
+          npm ls azure-functions-core-tools
+          node -e "const p=require.resolve('azure-functions-core-tools/package.json');const path=require('path');const fs=require('fs');const bin=path.join(path.dirname(p),'bin','func');console.log('azure-functions-core-tools package:',p);console.log('func binary path:',bin);console.log('func exists:',fs.existsSync(bin));"
+          ./node_modules/.bin/func --version
+          file ./node_modules/azure-functions-core-tools/bin/func || true
+        working-directory: api
       - name: Run API unit tests
         run: npm test
         working-directory: api
