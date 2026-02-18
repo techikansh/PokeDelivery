@@ -1,0 +1,21 @@
+meta {
+  name: Get invalid pokemon
+  type: http
+  seq: 3
+}
+
+get {
+  url: http://localhost:7071/api/getPokemon?name=notapokemon
+  body: none
+  auth: none
+}
+
+tests {
+  test("status is 500", function() {
+    expect(res.status).to.equal(500);
+  });
+
+  test("body contains error message", function() {
+    expect(res.body).to.include("Request failed with status code 404");
+  });
+}

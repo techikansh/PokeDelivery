@@ -3,7 +3,7 @@ name: CI
 on:
   push:
   pull_request:
-    branches: ["main"]
+    branches: ["master"]
 
 jobs:
   build-and-test:
@@ -25,3 +25,13 @@ jobs:
       - name: Run API unit tests
         run: npm test
         working-directory: api
+      - name: Install Bruno CLI
+        run: npm install -g @usebruno/cli
+      - name: Start API in background
+        run: npm start &
+        working-directory: api
+      - name: Wait for API to be ready
+        run: npx wait-on http://localhost:7071/api/getPokemon
+      - name: Run Bruno API tests
+        run: bru run getPokemon
+        working-directory: bruno

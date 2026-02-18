@@ -1,0 +1,29 @@
+meta {
+  name: Get Pikachu (default)
+  type: http
+  seq: 1
+}
+
+get {
+  url: http://localhost:7071/api/getPokemon
+  body: none
+  auth: none
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("returns pikachu", function() {
+    expect(res.body.name).to.equal("pikachu");
+  });
+
+  test("has correct type", function() {
+    expect(res.body.types).to.include("electric");
+  });
+
+  test("has favoriteFood", function() {
+    expect(res.body.favoriteFood).to.equal("Salmon");
+  });
+}
