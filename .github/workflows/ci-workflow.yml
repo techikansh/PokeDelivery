@@ -34,6 +34,19 @@ jobs:
       - name: Install Bruno CLI
         run: npm install -g @usebruno/cli
 
+      - name: Create local.settings.json
+        run: |
+          cat > local.settings.json << 'EOF'
+          {
+            "IsEncrypted": false,
+            "Values": {
+              "FUNCTIONS_WORKER_RUNTIME": "node",
+              "AzureWebJobsStorage": ""
+            }
+          }
+          EOF
+        working-directory: api
+
       - name: Start API in background
         run: npm start &
         working-directory: api
