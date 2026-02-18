@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+    branches: ["master"]
+
+jobs:
+  build-and-test:
+    strategy:
+      matrix:
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: api/package-lock.json
+
+      - name: Install Azure Functions Core Tools
+        run: npm install -g azure-functions-core-tools@4 --unsafe-perm true
+      
+      - name: Install API deps
+        run: npm ci
+        working-directory: api
+
+      - name: Verify Azure Functions Core Tools install
+        run: |
+          node -v
+          npm -v
+          npm ls azure-functions-core-tools
+          node -e "const p=require.resolve('azure-functions-core-tools/package.json');const path=require('path');const fs=require('fs');const bin=path.join(path.dirname(p),'bin','func');console.log('azure-functions-core-tools package:',p);console.log('func binary path:',bin);console.log('func exists:',fs.existsSync(bin));"
+          ./node_modules/.bin/func --version
+          file ./node_modules/azure-functions-core-tools/bin/func || true
+        working-directory: api
+
+      - name: Run API unit tests
+        run: npm test
+        working-directory: api
+
+      - name: Install Bruno CLI
+        run: npm install -g @usebruno/cli
+
+      - name: Start API in background
+        run: npm start &
+        working-directory: api
+
+      - name: Wait for API to be ready
+        run: npx wait-on http-get://localhost:7071/api/getPokemon --timeout 60000
+
+      - name: Run Bruno API tests
+        run: bru run getPokemon
+        working-directory: bruno
