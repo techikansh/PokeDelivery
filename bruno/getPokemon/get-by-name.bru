@@ -1,0 +1,30 @@
+meta {
+  name: Get Bulbasaur by name
+  type: http
+  seq: 2
+}
+
+get {
+  url: http://localhost:7071/api/getPokemon?name=bulbasaur
+  body: none
+  auth: none
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("returns bulbasaur", function() {
+    expect(res.body.name).to.equal("bulbasaur");
+  });
+
+  test("has correct types", function() {
+    expect(res.body.types).to.include("grass");
+    expect(res.body.types).to.include("poison");
+  });
+
+  test("has favoriteFood", function() {
+    expect(res.body.favoriteFood).to.equal("Avocado Roll");
+  });
+}
