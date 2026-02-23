@@ -61,3 +61,13 @@ jobs:
       - name: Run Bruno API tests
         run: bru run getPokemon
         working-directory: bruno
+
+      - name: Create deployment artifact
+        run: zip -r ../deployment.zip . -x "node_modules/*" "test.js" "local.settings.json"
+        working-directory: api
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-api-artifact
+          path: deployment.zip
