@@ -94,24 +94,20 @@ We use two long-lived branches and feature branches.
 Contains the stable and release-ready version of the application.  
 Direct pushes are not allowed.
 
-**main (development / integration)**  
-Used to integrate completed features before promoting them to `master`.  
-Direct pushes are not allowed.
-
 **feature/<short-description>**  
-Used for implementing new features or fixes (e.g., `feature/add-cache`, `feature/fix-ci`).
+Used for implementing new features (e.g. `feature/add-cache`).
+
+**bug-fix/<short-description>**  
+Used for implementing fixes (e.g. `fix/fix-ci`).
 
 ### Workflow
 
-1. Create a `feature/*` branch from `main`.
+1. Create a `feature/*` branch from `master`.
 2. Implement changes in the feature branch.
-3. Open a Pull Request from `feature/*` → `main`.
+3. Open a Pull Request from `feature/*` → `master`.
 4. The Pull Request must:
-   - Be approved by at least one reviewer.
    - Pass all GitHub Actions CI checks.
-5. For a release, open a Pull Request from `main` → `master`.
-6. This Pull Request must also be approved and pass CI before merging.
-
+   - Be approved by at least one reviewer.
  
  ---
 
