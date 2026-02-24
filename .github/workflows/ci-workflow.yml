@@ -64,7 +64,7 @@ jobs:
 
       - name: Create deployment artifact
         if: matrix.runner == 'ubuntu-24.04-arm'
-        run: zip -r ../deployment.zip . -x "node_modules/*" "test.js" "local.settings.json"
+        run: zip -r ../deployment.zip . -x "test.js" "local.settings.json"
         working-directory: api
 
       - name: Upload artifact
