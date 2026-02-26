@@ -26,7 +26,7 @@ module.exports = async function (context, req) {
     };
 
     // Custom local pokemon
-    if (name === 'marcus') {
+    if (name == 'marcus') {
         context.res = {
             status: 200,
             body: {
