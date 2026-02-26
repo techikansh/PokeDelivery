@@ -1,0 +1,47 @@
+version: "3"
+services:
+  jenkins:
+    build:
+      context: .
+      dockerfile: Dockerfile.controller
+    ports:
+      - "8080:8080"
+    environment:
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
+      - CASC_JENKINS_CONFIG=/usr/share/jenkins/ref/jenkins.yaml
+
+
+      # RBAC Users (Manager / Developer / Agent)
+      - JENKINS_MANAGER_USERNAME=${JENKINS_MANAGER_USERNAME:-manager}
+      - JENKINS_MANAGER_PASSWORD=${JENKINS_MANAGER_PASSWORD:-manager}
+
+      - JENKINS_DEVELOPER_USERNAME=${JENKINS_DEVELOPER_USERNAME:-developer}
+      - JENKINS_DEVELOPER_PASSWORD=${JENKINS_DEVELOPER_PASSWORD:-developer}
+
+      - JENKINS_AGENT_USERNAME=${JENKINS_AGENT_USERNAME:-agent}
+      - JENKINS_AGENT_PASSWORD=${JENKINS_AGENT_PASSWORD:-agent}
+
+
+#      - JENKINS_ADMIN_USERNAME=${JENKINS_ADMIN_USERNAME:-admin}
+#      - JENKINS_ADMIN_PASSWORD=${JENKINS_ADMIN_PASSWORD:-admin}
+#      - JENKINS_AGENT_USERNAME=${JENKINS_AGENT_USERNAME:-agent}
+#      - JENKINS_AGENT_PASSWORD=${JENKINS_AGENT_PASSWORD:-agent}
+      - GITHUB_USERNAME=${GITHUB_USERNAME}
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+
+      - AZURE_SP_APPID={AZURE_SP_APPID}
+      - AZURE_SP_PASSWORD={AZURE_SP_PASSWORD}
+
+  agent1:
+    build:
+      context: .
+      dockerfile: Dockerfile.agent
+    environment:
+      - JENKINS_AGENT_NAME=agent1
+      - JENKINS_URL=http://jenkins:8080
+      - JENKINS_AGENT_WORKDIR=/home/jenkins/agent
+      - JENKINS_WEB_SOCKET=true
+      - JENKINS_AGENT_USERNAME=${JENKINS_AGENT_USERNAME:-agent}
+      - JENKINS_AGENT_PASSWORD=${JENKINS_AGENT_PASSWORD:-agent}
+    depends_on:
+      - jenkins

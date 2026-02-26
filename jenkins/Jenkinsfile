@@ -1,0 +1,135 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Download GitHub Actions Artifact') {
+                steps {
+                    sh '''#!/bin/bash
+                        set -euo pipefail
+
+                        echo "Fetching latest successful run ID..."
+
+                        RUN_ID=$(curl -s -H "Authorization: Bearer $GITHUB_PSW" \
+                            "https://api.github.com/repos/techikansh/PokeDelivery/actions/runs?branch=master&status=success&per_page=1" \
+                            | grep '"id"' | head -n 1 | sed 's/[^0-9]*//g')
+
+                        echo "RUN_ID = $RUN_ID"
+
+                        echo "Fetching artifact URL..."
+
+                        ARTIFACT_URL=$(curl -s -H "Authorization: Bearer $GITHUB_PSW" \
+                            "https://api.github.com/repos/techikansh/PokeDelivery/actions/runs/$RUN_ID/artifacts" \
+                            | grep -A3 '"name": "deployment-api-artifact"' \
+                            | grep '"archive_download_url"' \
+                            | head -n 1 \
+                            | sed -E 's/.*"archive_download_url": *"([^"]+)".*/\\1/')
+
+                        echo "Artifact URL = $ARTIFACT_URL"
+
+                        echo "Downloading artifact..."
+                        curl -L -H "Authorization: Bearer $GITHUB_PSW" \
+                            "$ARTIFACT_URL" -o deployment-api-artifact.zip
+
+                        echo "Unzipping outer ZIP..."
+                        unzip -o deployment-api-artifact.zip         # creates deployment.zip.
+
+                        echo "Done: deployment-fixed.zip is ready for Azure."
+
+
+                        echo "Download complete."
+                        '''
+
+                }
+        }
+
+
+
+       stage('Deploy to Azure') {
+            steps {
+                sh '''
+                set -euo pipefail
+
+                az login --service-principal \
+                    -u ${AZURE_USR} \
+                    -p ${AZURE_PSW} \
+                    --tenant $TENANT
+
+                az account set --subscription $SUBSCRIPTION
+
+                az group create \
+                  --name $RESOURCEGROUP \
+                  --location westeurope
+
+                az storage account create \
+                    --name $STORAGEACCOUNT  \
+                    --location westeurope \
+                    --resource-group $RESOURCEGROUP \
+                    --sku Standard_LRS
+
+                az functionapp create \
+                    --resource-group $RESOURCEGROUP \
+                    --consumption-plan-location westeurope \
+                    --runtime node \
+                    --functions-version 4 \
+                    --name $FUNCTIONAPP \
+                    --storage-account $STORAGEACCOUNT || true  # idempotent
+
+
+                az rest --method put \
+                  --url "https://management.azure.com/subscriptions/$SUBSCRIPTION/resourceGroups/$RESOURCEGROUP/providers/Microsoft.OperationalInsights/workspaces/${FUNCTIONAPP}-law?api-version=2022-10-01" \
+                  --headers Content-Type=application/json \
+                  --body '{
+                    "location": "westeurope",
+                    "properties": {
+                      "sku": { "name": "PerGB2018" },
+                      "retentionInDays": 30
+                    }
+                  }'
+
+                # Create Application Insights
+                az rest --method put \
+                  --url "https://management.azure.com/subscriptions/$SUBSCRIPTION/resourceGroups/$RESOURCEGROUP/providers/Microsoft.Insights/components/${FUNCTIONAPP}-ai?api-version=2020-02-02" \
+                  --headers Content-Type=application/json \
+                  --body "{
+                    \\"location\\": \\"westeurope\\",
+                    \\"kind\\": \\"web\\",
+                    \\"properties\\": {
+                      \\"Application_Type\\": \\"web\\",
+                      \\"WorkspaceResourceId\\": \\"/subscriptions/$SUBSCRIPTION/resourceGroups/$RESOURCEGROUP/providers/Microsoft.OperationalInsights/workspaces/${FUNCTIONAPP}-law\\"
+                    }
+                  }"
+
+                # Read AI Keys
+                INSTRUMENTATION_KEY=$(az rest --method get \
+                  --url "https://management.azure.com/subscriptions/$SUBSCRIPTION/resourceGroups/$RESOURCEGROUP/providers/Microsoft.Insights/components/${FUNCTIONAPP}-ai?api-version=2020-02-02" \
+                  --query properties.InstrumentationKey -o tsv)
+
+                CONNECTION_STRING=$(az rest --method get \
+                  --url "https://management.azure.com/subscriptions/$SUBSCRIPTION/resourceGroups/$RESOURCEGROUP/providers/Microsoft.Insights/components/${FUNCTIONAPP}-ai?api-version=2020-02-02" \
+                  --query properties.ConnectionString -o tsv)
+
+                # Set function app settings
+                az functionapp config appsettings set \
+                  --resource-group $RESOURCEGROUP \
+                  --name $FUNCTIONAPP \
+                  --settings "APPINSIGHTS_INSTRUMENTATIONKEY=$INSTRUMENTATION_KEY" "APPLICATIONINSIGHTS_CONNECTION_STRING=$CONNECTION_STRING"
+
+                az functionapp deployment source config-zip \
+                    --resource-group $RESOURCEGROUP \
+                    --name $FUNCTIONAPP \
+                    --src deployment.zip
+                '''
+            }
+        }
+    }
+
+    environment {
+        GITHUB = credentials('githubc')
+        AZURE  = credentials('azurespc')
+        FUNCTIONAPP = 'team-chaos-app-v4'
+        RESOURCEGROUP = 'rg01'
+        SUBSCRIPTION = '2a6f91a3-5ad0-44d9-9076-f10f55d556f8'
+        TENANT = '4ad04d3d-c0d5-4e4f-b066-817c0bb8579a'
+        STORAGEACCOUNT = 'sateamchaosapp01'
+    }
+}
