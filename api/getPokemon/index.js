@@ -1,7 +1,7 @@
 const axios = require('axios');
 
 module.exports = async function (context, req) {
-    const name = req.query.name || 'pikachu';
+    const name = (req.query.name || 'pikachu').toLowerCase();
 
     // Mapping of Pokémon types to their favorite sushi
     const sushiPreferences = {
@@ -24,6 +24,23 @@ module.exports = async function (context, req) {
         flying: 'Airy Rice Ball',
         normal: 'Classic Nigiri'
     };
+
+    // Custom local pokemon
+    if (name === 'marcus') {
+        context.res = {
+            status: 200,
+            body: {
+                name: 'marcus',
+                id: 42,
+                height: 10, // 10 inches (custom unit in your example)
+                weight: 150,
+                base_experience: 999,
+                types: ['CTO Tier'],
+                favoriteFood: "Kaffee"
+            }
+        };
+        return;
+    }
 
     try {
         const response = await axios.get(`https://pokeapi.co/api/v2/pokemon/${name}`);
