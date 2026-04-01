@@ -1,0 +1,29 @@
+FROM jenkins/inbound-agent:jdk21
+
+USER root
+
+RUN apt-get update && \
+    apt-get install -y ca-certificates curl apt-transport-https lsb-release gnupg unzip
+
+RUN mkdir -p /etc/apt/keyrings && \
+    curl -sLS https://packages.microsoft.com/keys/microsoft.asc | \
+    gpg --dearmor > /etc/apt/keyrings/microsoft.gpg && \
+    chmod go+r /etc/apt/keyrings/microsoft.gpg
+
+RUN AZ_DIST=bookworm && \
+    ARCH=$(dpkg --print-architecture) && \
+    cat <<EOF > /etc/apt/sources.list.d/azure-cli.sources
+Types: deb
+URIs: https://packages.microsoft.com/repos/azure-cli/
+Suites: ${AZ_DIST}
+Components: main
+Architectures: $(ARCH)
+Signed-by: /etc/apt/keyrings/microsoft.gpg
+EOF
+
+RUN apt-get update && \
+    apt-get install -y azure-cli
+
+USER jenkins
+COPY agent.sh /agent.sh
+ENTRYPOINT ["/agent.sh"]

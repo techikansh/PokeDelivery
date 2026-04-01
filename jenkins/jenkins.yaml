@@ -1,0 +1,68 @@
+jenkins:
+  mode: NORMAL
+  numExecutors: 0
+
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: ${JENKINS_AGENT_USERNAME}
+          password: ${JENKINS_AGENT_PASSWORD}
+
+        - id: ${JENKINS_MANAGER_USERNAME}
+          password: ${JENKINS_MANAGER_PASSWORD}
+
+        - id: ${JENKINS_DEVELOPER_USERNAME}
+          password: ${JENKINS_DEVELOPER_PASSWORD}
+
+  authorizationStrategy:
+    roleBased:
+      roles:
+        global:
+
+          # Manager: nur lesen
+          - name: manager
+            permissions:
+              - Overall/Read
+              - Job/Read
+              - Agent/Read
+              - Credentials/View
+            entries:
+              - user: ${JENKINS_MANAGER_USERNAME}
+
+          # Developer: voller Zugriff
+          - name: developer
+            permissions:
+              - Overall/Administer
+            entries:
+              - user: ${JENKINS_DEVELOPER_USERNAME}
+
+          # Agent-Rolle falls benötigt
+          - name: agent
+            permissions:
+              - Overall/Read
+              - Agent/Connect
+              - Agent/Disconnect
+              - Agent/Build
+            entries:
+              - user: ${JENKINS_AGENT_USERNAME}
+
+  nodes:
+    - permanent:
+        name: agent1
+        launcher: inbound
+        remoteFS: /home/jenkins/agent
+
+
+credentials:
+  system:
+    domainCredentials:
+      - credentials:
+          - usernamePassword:
+              id: "githubc"
+              username: "${GITHUB_USERNAME}"
+              password: "${GITHUB_TOKEN}"
+          - usernamePassword:
+              id: "azurespc"
+              username: "${AZURE_SP_APPID}"
+              password: "${AZURE_SP_PASSWORD}"
