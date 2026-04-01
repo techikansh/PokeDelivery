@@ -80,40 +80,6 @@ Das Dev Team hat bereits eine Entwicklerversion der APP auf Basis des `Requireme
 - Entscheidungen für oder gegen bestimmte Architektur-Entscheidungen und Tools soll vorliegen.
 - Eine Entwickler Dokumentation soll vorliegen.
 
----
-
-
-
-## Branching Strategy
-
-We use two long-lived branches and feature branches.
-
-### Branches
-
-**master (stable / production)**  
-Contains the stable and release-ready version of the application.  
-Direct pushes are not allowed.
-
-**feature/<short-description>**  
-Used for implementing new features (e.g. `feature/add-cache`).
-
-**bug-fix/<short-description>**  
-Used for implementing fixes (e.g. `fix/fix-ci`).
-
-### Workflow
-
-1. Create a `feature/*` branch from `master`.
-2. Implement changes in the feature branch.
-3. Open a Pull Request from `feature/*` → `master`.
-4. The Pull Request must:
-   - Pass all GitHub Actions CI checks.
-   - Be approved by at least one reviewer.
- 
- ---
-
-
-
-
 ## Wissenswertes
 
 ### Videos
