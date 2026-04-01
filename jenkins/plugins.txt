@@ -1,4 +1,0 @@
-configuration-as-code
-workflow-aggregator
-role-strategy
-job-dsl
