@@ -1,0 +1,59 @@
+pipeline {
+    agent any
+
+    environment {
+        OWNER = 'techikansh'
+        REPO = 'PokeDelivery'
+        BRANCH = 'extension'
+        ARTIFACT_NAME = 'deployment-api-artifact'
+        GITHUB_TOKEN = credentials('github-pat')
+        // GITHUB_TOKEN = ''
+    }
+
+    stages {
+        stage('Download latest artifact from latest successful master run') {
+            steps {
+                sh '''
+                    set -euo pipefail
+
+                    RUN_ID=$(
+                      curl -s \
+                        -H "Accept: application/vnd.github+json" \
+                        -H "Authorization: Bearer $GITHUB_TOKEN" \
+                        "https://api.github.com/repos/$OWNER/$REPO/actions/runs?branch=$BRANCH&status=success&per_page=1" \
+                      | jq -r '.workflow_runs[0].id'
+                    )
+
+                    echo "Latest successful master run id: $RUN_ID"
+
+                    ARTIFACT_ID=$(
+                      curl -s \
+                        -H "Accept: application/vnd.github+json" \
+                        -H "Authorization: Bearer $GITHUB_TOKEN" \
+                        "https://api.github.com/repos/$OWNER/$REPO/actions/runs/$RUN_ID/artifacts" \
+                      | jq -r --arg NAME "$ARTIFACT_NAME" '.artifacts[] | select(.name==$NAME and .expired==false) | .id' \
+                      | head -n 1
+                    )
+
+                    echo "Artifact id: $ARTIFACT_ID"
+
+                    mkdir -p downloads
+
+                    curl -L \
+                      -H "Accept: application/vnd.github+json" \
+                      -H "Authorization: Bearer $GITHUB_TOKEN" \
+                      "https://api.github.com/repos/$OWNER/$REPO/actions/artifacts/$ARTIFACT_ID/zip" \
+                      -o "downloads/${ARTIFACT_NAME}.zip"
+
+                    ls -lh downloads
+                '''
+            }
+        }
+
+        stage('Archive in Jenkins') {
+            steps {
+                archiveArtifacts artifacts: 'downloads/*', fingerprint: true
+            }
+        }
+    }
+}
