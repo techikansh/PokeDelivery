@@ -12,10 +12,28 @@ services:
     environment:
       CASC_JENKINS_CONFIG: /var/jenkins_home/casc/jenkins.yaml
       GITHUB_PAT: ${GITHUB_PAT}
+      JENKINS_ADMIN_PASSWORD: ${JENKINS_ADMIN_PASSWORD}
     volumes:
       - jenkins_home:/var/jenkins_home
       - ./casc:/var/jenkins_home/casc
 
+  agent:
+    build:
+      context: .
+      dockerfile: Dockerfile-agent
+    container_name: artifact-agent-1
+    depends_on:
+      - jenkins
+    environment:
+      JENKINS_ADMIN_PASSWORD: ${JENKINS_ADMIN_PASSWORD}
+      GITHUB_PAT: ${GITHUB_PAT}
+    volumes:
+      - ./agent-entrypoint.sh:/entrypoint.sh
+      - agent_workspace:/home/jenkins/agent
+    entrypoint: ["/bin/bash", "/entrypoint.sh"]
+    restart: on-failure                 # retries if Jenkins isn't ready yet
+
 
 volumes:
   jenkins_home:
+  agent_workspace:

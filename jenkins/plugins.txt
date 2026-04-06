@@ -4,3 +4,4 @@ git
 credentials
 matrix-auth
 antisamy-markup-formatter
+ssh-slaves

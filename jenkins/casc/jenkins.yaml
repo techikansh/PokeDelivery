@@ -1,5 +1,28 @@
 jenkins:
   systemMessage: "Jenkins configured automatically"
+  numExecutors: 0
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: "admin"
+          password: "${JENKINS_ADMIN_PASSWORD}"
+  authorizationStrategy:
+    loggedInUsersCanDoAnything:
+      allowAnonymousRead: false
+
+  nodes:
+    - permanent:
+        name: "artifact-agent-1"
+        remoteFS: "/home/jenkins/agent"
+        numExecutors: 1
+        labelString: "artifact-agent"
+        mode: NORMAL
+        retentionStrategy: "always"
+        launcher:
+          inbound:
+            webSocket: true
+
 
 credentials:
   system:
