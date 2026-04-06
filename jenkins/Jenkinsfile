@@ -1,13 +1,14 @@
 pipeline {
     agent any
+    // agent { label 'docker' }
 
     environment {
         OWNER = 'techikansh'
         REPO = 'PokeDelivery'
         BRANCH = 'extension'
         ARTIFACT_NAME = 'deployment-api-artifact'
-        GITHUB_TOKEN = credentials('github-pat')
-        // GITHUB_TOKEN = ''
+        // GITHUB_TOKEN = credentials('github-pat')
+        
     }
 
     stages {
