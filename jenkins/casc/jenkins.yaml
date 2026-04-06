@@ -1,0 +1,11 @@
+jenkins:
+  systemMessage: "Jenkins configured automatically"
+
+credentials:
+  system:
+    domainCredentials:
+      - credentials:
+          - string:
+              id: "github-pat"
+              description: "GitHub PAT for API calls"
+              secret: "${GITHUB_PAT}"
