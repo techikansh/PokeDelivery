@@ -5,3 +5,4 @@ credentials
 matrix-auth
 antisamy-markup-formatter
 ssh-slaves
+job-dsl

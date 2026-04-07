@@ -23,7 +23,6 @@ jenkins:
           inbound:
             webSocket: true
 
-
 credentials:
   system:
     domainCredentials:
@@ -32,3 +31,15 @@ credentials:
               id: "github-pat"
               description: "GitHub PAT for API calls"
               secret: "${GITHUB_PAT}"
+
+jobs:
+  - script: |
+      pipelineJob('Download and Archive Artifact') {
+        definition {
+          cps {
+            script(new File('/var/jenkins_home/Jenkinsfile').text)
+            sandbox(true)
+          }
+        }
+      }
+
