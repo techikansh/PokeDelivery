@@ -32,6 +32,22 @@ resource "azurerm_service_plan" "main" {
   sku_name            = "Y1"  # Consumption plan (serverless)
 }
 
+resource "azurerm_log_analytics_workspace" "main" {
+  name                = "${var.project}-logs"
+  resource_group_name = azurerm_resource_group.main.name
+  location            = azurerm_resource_group.main.location
+  sku                 = "PerGB2018"
+  retention_in_days   = 30
+}
+
+resource "azurerm_application_insights" "main" {
+  name                = "${var.project}-insights"
+  resource_group_name = azurerm_resource_group.main.name
+  location            = azurerm_resource_group.main.location
+  workspace_id        = azurerm_log_analytics_workspace.main.id
+  application_type    = "Node.JS"
+}
+
 resource "azurerm_linux_function_app" "main" {
   name                = "${var.project}-fun"
   resource_group_name = azurerm_resource_group.main.name
@@ -48,7 +64,9 @@ resource "azurerm_linux_function_app" "main" {
   }
 
   app_settings = {
-    FUNCTIONS_WORKER_RUNTIME = "node"
-    WEBSITE_RUN_FROM_PACKAGE = "1"
+    FUNCTIONS_WORKER_RUNTIME            = "node"
+    WEBSITE_RUN_FROM_PACKAGE            = "1"
+    APPINSIGHTS_INSTRUMENTATIONKEY      = azurerm_application_insights.main.instrumentation_key
+    APPLICATIONINSIGHTS_CONNECTION_STRING = azurerm_application_insights.main.connection_string
   }
 }
