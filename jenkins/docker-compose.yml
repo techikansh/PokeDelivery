@@ -13,6 +13,10 @@ services:
       CASC_JENKINS_CONFIG: /var/jenkins_home/casc/jenkins.yaml
       GITHUB_PAT: ${GITHUB_PAT}
       JENKINS_ADMIN_PASSWORD: ${JENKINS_ADMIN_PASSWORD}
+      ARM_CLIENT_ID: ${ARM_CLIENT_ID}
+      ARM_CLIENT_SECRET: ${ARM_CLIENT_SECRET}
+      ARM_TENANT_ID: ${ARM_TENANT_ID}
+      ARM_SUBSCRIPTION_ID: ${ARM_SUBSCRIPTION_ID}
     volumes:
       - jenkins_home:/var/jenkins_home
       - ./casc:/var/jenkins_home/casc
@@ -32,8 +36,7 @@ services:
       - ./agent-entrypoint.sh:/entrypoint.sh
       - agent_workspace:/home/jenkins/agent
     entrypoint: ["/bin/bash", "/entrypoint.sh"]
-    restart: on-failure                 # retries if Jenkins isn't ready yet
-
+    restart: on-failure
 
 volumes:
   jenkins_home:

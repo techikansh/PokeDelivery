@@ -8,10 +8,24 @@ pipeline {
         BRANCH = 'extension'
         ARTIFACT_NAME = 'deployment-api-artifact'
         GITHUB_TOKEN = credentials('github-pat')
+        ARM_CLIENT_ID = credentials('arm-client-id')
+        ARM_CLIENT_SECRET = credentials('arm-client-secret')
+        ARM_TENANT_ID = credentials('arm-tenant-id')
+        ARM_SUBSCRIPTION_ID = credentials('arm-subscription-id')
     }
 
     stages {
-        stage('Download latest artifact from latest successful master run') {
+        stage('Checkout') {
+            steps {
+                sh '''
+                    rm -rf repo
+                    git clone --depth 1 --branch $BRANCH \
+                        https://${GITHUB_TOKEN}@github.com/${OWNER}/${REPO}.git repo
+                '''
+            }
+        }
+
+        stage('Download Artifact') {
             steps {
                 sh '''
                     set -euo pipefail
@@ -23,18 +37,17 @@ pipeline {
                         "https://api.github.com/repos/$OWNER/$REPO/actions/runs?branch=$BRANCH&status=success&per_page=1" \
                       | jq -r '.workflow_runs[0].id'
                     )
-
-                    echo "Latest successful master run id: $RUN_ID"
+                    echo "Latest successful run: $RUN_ID"
 
                     ARTIFACT_ID=$(
                       curl -s \
                         -H "Accept: application/vnd.github+json" \
                         -H "Authorization: Bearer $GITHUB_TOKEN" \
                         "https://api.github.com/repos/$OWNER/$REPO/actions/runs/$RUN_ID/artifacts" \
-                      | jq -r --arg NAME "$ARTIFACT_NAME" '.artifacts[] | select(.name==$NAME and .expired==false) | .id' \
+                      | jq -r --arg NAME "$ARTIFACT_NAME" \
+                        '.artifacts[] | select(.name==$NAME and .expired==false) | .id' \
                       | head -n 1
                     )
-
                     echo "Artifact id: $ARTIFACT_ID"
 
                     mkdir -p downloads
@@ -45,7 +58,47 @@ pipeline {
                       "https://api.github.com/repos/$OWNER/$REPO/actions/artifacts/$ARTIFACT_ID/zip" \
                       -o "downloads/${ARTIFACT_NAME}.zip"
 
-                    ls -lh downloads
+                    unzip -o "downloads/${ARTIFACT_NAME}.zip" -d downloads/
+                    ls -lh downloads/
+                '''
+            }
+        }
+
+        stage('Azure Login') {
+            steps {
+                sh '''
+                    az login --service-principal \
+                        -u "$ARM_CLIENT_ID" \
+                        -p "$ARM_CLIENT_SECRET" \
+                        --tenant "$ARM_TENANT_ID"
+
+                    az account set --subscription "$ARM_SUBSCRIPTION_ID"
+
+                    echo "Logged in:"
+                    az account show --query "{sub:name, id:id}" -o table
+                '''
+            }
+        }
+
+        stage('Terraform Apply') {
+            steps {
+                sh '''
+                    cd repo/terraform
+
+                    terraform init
+                    terraform apply -auto-approve
+                '''
+            }
+        }
+
+        stage('Deploy to Azure') {
+            steps {
+                sh '''
+                    ls -lh downloads/
+                    az functionapp deployment source config-zip \
+                        --resource-group pokedelivery-rg \
+                        --name pokedelivery-fun \
+                        --src downloads/deployment.zip
                 '''
             }
         }

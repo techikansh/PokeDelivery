@@ -31,6 +31,22 @@ credentials:
               id: "github-pat"
               description: "GitHub PAT for API calls"
               secret: "${GITHUB_PAT}"
+          - string:
+              id: "arm-client-id"
+              description: "Azure SP Client ID"
+              secret: "${ARM_CLIENT_ID}"
+          - string:
+              id: "arm-client-secret"
+              description: "Azure SP Client Secret"
+              secret: "${ARM_CLIENT_SECRET}"
+          - string:
+              id: "arm-tenant-id"
+              description: "Azure Tenant ID"
+              secret: "${ARM_TENANT_ID}"
+          - string:
+              id: "arm-subscription-id"
+              description: "Azure Subscription ID"
+              secret: "${ARM_SUBSCRIPTION_ID}"
 
 jobs:
   - script: |
@@ -42,4 +58,3 @@ jobs:
           }
         }
       }
-
