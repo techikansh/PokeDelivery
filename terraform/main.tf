@@ -73,7 +73,7 @@ resource "azurerm_linux_function_app" "main" {
 
   app_settings = {
     FUNCTIONS_WORKER_RUNTIME            = "node"
-    WEBSITE_RUN_FROM_PACKAGE            = "1"
+    # WEBSITE_RUN_FROM_PACKAGE            = "1"
     APPINSIGHTS_INSTRUMENTATIONKEY      = azurerm_application_insights.main.instrumentation_key
     APPLICATIONINSIGHTS_CONNECTION_STRING = azurerm_application_insights.main.connection_string
   }
